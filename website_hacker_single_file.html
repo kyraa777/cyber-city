@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hacker-Style Portfolio</title>
+  <meta name="description" content="Website gaya hacker — terminal, effect matrix, dan vibe 'dark-console' untuk portfolio atau showreel." />
+  <style>
+    /* Reset */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+
+    /* Background */
+    body{
+      background:#000;
+      color:#9ef06b; /* green terminal */
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
+      overflow:auto;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* Matrix canvas sits behind content */
+    canvas#matrix{
+      position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.12;
+    }
+
+    /* Page layout */
+    .wrap{position:relative;z-index:2;max-width:1100px;margin:40px auto;padding:28px}
+    header{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+
+    .logo{
+      width:76px;height:76px;border-radius:8px;border:1px solid rgba(158,240,107,0.12);
+      display:grid;place-items:center;font-weight:700;font-size:20px;background:rgba(0,0,0,0.4)
+    }
+
+    h1{font-size:20px;margin-bottom:2px}
+    p.lead{color:rgba(158,240,107,0.85)}
+
+    /* Terminal card */
+    .terminal{
+      margin-top:18px;padding:18px;border-radius:10px;background:linear-gradient(180deg,rgba(0,0,0,0.55),rgba(0,0,0,0.35));
+      border:1px solid rgba(158,240,107,0.06);box-shadow:0 8px 30px rgba(0,0,0,0.6)
+    }
+
+    .term-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .lights{display:flex;gap:6px}
+    .dot{width:10px;height:10px;border-radius:999px;background:#333;border:2px solid rgba(255,255,255,0.04)}
+    .dot.red{background:#ff5f56}
+    .dot.yellow{background:#ffbd2e}
+    .dot.green{background:#27c93f}
+
+    .screen{min-height:160px;padding:12px;background:rgba(0,0,0,0.25);border-radius:6px;overflow:auto}
+
+    .cursor{display:inline-block;width:8px;height:18px;margin-left:6px;background:#9ef06b;animation:blink .9s steps(1) infinite;vertical-align:bottom}
+    @keyframes blink{50%{opacity:0}}
+
+    /* command list */
+    .cmd{color:#9ef06b;white-space:pre-wrap;line-height:1.45}
+    .muted{color:rgba(158,240,107,0.45)}
+
+    /* sections */
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
+    .card{background:rgba(0,0,0,0.35);padding:12px;border-radius:8px;border:1px solid rgba(158,240,107,0.04)}
+
+    .projects li{list-style:none;padding:10px;border-bottom:1px dashed rgba(158,240,107,0.04)}
+    .projects li:last-child{border-bottom:none}
+    .project-title{font-weight:700}
+    .project-desc{font-size:13px;color:rgba(158,240,107,0.8)}
+
+    /* footer */
+    footer{margin-top:28px;color:rgba(158,240,107,0.5);font-size:13px}
+
+    /* responsive */
+    @media (max-width:900px){.grid{grid-template-columns:1fr}.logo{width:64px;height:64px}}
+
+    /* small UI touches */
+    a.hacklink{color:#9ef06b;text-decoration:underline dotted}
+    button.btn{background:transparent;border:1px solid rgba(158,240,107,0.16);padding:8px 12px;border-radius:6px;color:#9ef06b;cursor:pointer}
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="wrap">
+    <header>
+      <div class="logo">H4CK</div>
+      <div>
+        <h1>Website Gaya Hacker — Portfolio / Landing</h1>
+        <p class="lead">Terminal vibes, efek "matrix", dan UI minimal buat nampilin projek atau showreel.</p>
+      </div>
+    </header>
+
+    <div class="terminal card">
+      <div class="term-top">
+        <div class="lights"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+        <div class="muted">user@localhost:~$ <span style="opacity:.8">welcome</span></div>
+      </div>
+
+      <div class="screen" id="screen">
+        <div class="cmd" id="typed"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Projects</h3>
+        <ul class="projects" id="projects">
+          <li>
+            <div class="project-title">Stealth UI</div>
+            <div class="project-desc">Tiny CSS toolkit buat interface console-style.</div>
+          </li>
+          <li>
+            <div class="project-title">Packet Visualizer</div>
+            <div class="project-desc">Simulasi trafik jaringan (demo only).</div>
+          </li>
+          <li>
+            <div class="project-title">Terminal Blog</div>
+            <div class="project-desc">Blog dengan post yang muncul sebagai command output.</div>
+          </li>
+        </ul>
+      </div>
+
+      <aside class="card">
+        <h3>Contact</h3>
+        <p class="muted">Email: <a class="hacklink" href="mailto:you@example.com">you@example.com</a></p>
+        <p class="muted">Github: <a class="hacklink" href="#">github.com/username</a></p>
+        <div style="margin-top:10px"><button class="btn" onclick="runDemo()">Run demo command</button></div>
+      </aside>
+    </div>
+
+    <footer>
+      Tips: Save file ini sebagai <code>index.html</code> lalu buka di browser. Untuk custom, ganti teks di bagian <code>const LINES</code> di script.
+    </footer>
+  </div>
+
+  <script>
+    // -----------------
+    // Typing / Terminal simulation
+    // -----------------
+    const LINES = [
+      'Connecting to 192.168.0.1...',
+      'Handshake OK — AES-256 simulated',
+      'Downloading /assets/portfolio.zip [======>        ] 42% ',
+      'Unpacking files... done',
+      'Launching stealth-ui v0.9',
+      'echo "Welcome — this is a demo terminal. Modify LINES in script to change messages."'
+    ];
+
+    const typedEl = document.getElementById('typed');
+    let lineIndex = 0;
+    let charIndex = 0;
+
+    function typeNextChar(){
+      if(lineIndex >= LINES.length) return;
+      const line = LINES[lineIndex];
+      typedEl.innerHTML = typedEl.innerHTML.replace(/\n?$/, '\n') + '';
+      if(charIndex < line.length){
+        const current = (typedEl.getAttribute('data-text')||'') + line[charIndex];
+        typedEl.setAttribute('data-text', current);
+        typedEl.innerHTML = escapeHtml(current) + '<span class="cursor"></span>';
+        charIndex++;
+        setTimeout(typeNextChar, 40 + Math.random()*90);
+      } else {
+        // finished line
+        typedEl.setAttribute('data-text', typedEl.getAttribute('data-text') + '\n');
+        typedEl.innerHTML = escapeHtml(typedEl.getAttribute('data-text')) + '<span class="cursor"></span>';
+        lineIndex++;
+        charIndex = 0;
+        setTimeout(typeNextChar, 400 + Math.random()*700);
+      }
+    }
+
+    function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // start typing after small delay
+    setTimeout(typeNextChar, 700);
+
+    // demo command from button
+    function runDemo(){
+      LINES.push('sys.scan --deep --timeout=3s');
+      LINES.push('scan: 3 hosts found (192.168.0.2,192.168.0.5,10.0.0.12)');
+      if(lineIndex >= LINES.length-3) typeNextChar();
+    }
+
+    // -----------------
+    // Matrix rain effect
+    // -----------------
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    let cols, rows, fontSize=14, drops;
+
+    function resize(){
+      canvas.width = innerWidth; canvas.height = innerHeight;
+      cols = Math.floor(canvas.width / fontSize);
+      rows = Math.floor(canvas.height / fontSize);
+      drops = new Array(cols).fill(1).map(()=>Math.floor(Math.random()*rows));
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const chars = '01ABCDEFGabcdefghiJKLMNOPQRSTUVWXYZあいうえお漢字@#$%&*()<>?/\\|[]{}-+';
+
+    function draw(){
+      ctx.fillStyle = 'rgba(0,0,0,0.06)';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = '#9ef06b';
+      ctx.font = fontSize+'px monospace';
+      for(let i=0;i<cols;i++){
+        const text = chars.charAt(Math.floor(Math.random()*chars.length));
+        ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+        if(drops[i]*fontSize > canvas.height && Math.random()>0.975) drops[i]=0;
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // small accessibility: stop animation when page hidden
+    document.addEventListener('visibilitychange', ()=>{ if(document.hidden) cancelAnimationFrame(draw); else draw(); });
+
+    // optional: add keyboard interactivity for fun
+    window.addEventListener('keydown', e=>{
+      if(e.key === 'Escape'){
+        // clear terminal
+        typedEl.setAttribute('data-text',''); typedEl.innerHTML=''; lineIndex=0; charIndex=0;
+      }
+      if(e.key === 'Enter'){
+        runDemo();
+      }
+    });
+  </script>
+</body>
+</html>
